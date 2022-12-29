@@ -327,3 +327,4 @@ class Forward(object):
         return tf.reduce_sum(self.log_sum_exp(last_alphas, axis=1)), max_scores, max_scores_pre
 
 
+

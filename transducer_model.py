@@ -4,7 +4,7 @@ import tensorflow.contrib.legacy_seq2seq as seq2seq
 import toolbox
 import batch as Batch
 import numpy as np
-import cPickle as pickle
+import pickle as pickle
 import evaluation
 
 import os
@@ -41,7 +41,7 @@ class Seq2seq(object):
         params = tf.trainable_variables()
         gradients = tf.gradients(loss, params)
         clipped_gradients, norm = tf.clip_by_global_norm(gradients, 5.0)
-        self.trans_train = optimizer.apply_gradients(zip(clipped_gradients, params))
+        self.trans_train = optimizer.apply_gradients(list(zip(clipped_gradients, params)))
 
         self.saver = tf.train.Saver()
 
@@ -59,7 +59,7 @@ class Seq2seq(object):
 
     def train(self, t_x, t_y, v_x, v_y, lrv, char2idx, sess, epochs, batch_size=10, reset=True):
 
-        idx2char = {k: v for v, k in char2idx.items()}
+        idx2char = {k: v for v, k in list(char2idx.items())}
         v_y_g = [np.trim_zeros(v_y_t) for v_y_t in v_y]
         gold_out = [toolbox.generate_trans_out(v_y_t, idx2char) for v_y_t in v_y_g]
 
@@ -77,10 +77,10 @@ class Seq2seq(object):
 
                 c_scores = evaluation.trans_evaluator(gold_out, pred_out)
 
-                print 'epoch: %d' % (epoch + 1)
+                print('epoch: %d' % (epoch + 1))
 
-                print 'ACC: %f' % c_scores[0]
-                print 'Token F score: %f' % c_scores[1]
+                print('ACC: %f' % c_scores[0])
+                print('Token F score: %f' % c_scores[1])
 
                 if c_scores[1] > best_score:
                     best_score = c_scores[1]
@@ -94,12 +94,13 @@ class Seq2seq(object):
         t_x = [t_x_t[:self.encode_step] for t_x_t in t_x]
         t_x = toolbox.pad_zeros(t_x, self.encode_step)
 
-        idx2char = {k: v for v, k in char2idx.items()}
+        idx2char = {k: v for v, k in list(char2idx.items())}
 
         pred = Batch.predict_seq2seq(sess, model=self.en_vec + self.de_vec + self.trans_output, decoding=self.feed_previous,
                                          decode_len=self.decode_step, data=[t_x], argmax=True, batch_size=batch_size)
         pred_out = [toolbox.generate_trans_out(pre_t, idx2char) for pre_t in pred]
 
         return pred_out
+
 
 

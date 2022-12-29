@@ -9,9 +9,9 @@ import random
 import os
 import math
 from reader import get_gold
+import imp
 
-sys = reload(sys)
-sys.setdefaultencoding('utf-8')
+sys = imp.reload(sys)
 
 punc = ['!', ')', ',', '.', ';', ':', '?', '»', '...', '..', '....', '%', 'º', '²', '°', '¿', '¡', '(', '«',
         '"', '\'', '-', '。', '·', '।', '۔']
@@ -49,7 +49,7 @@ def get_chars(path, filelist, sea=False):
                         char_set[ch] += 1
                 else:
                     char_set[ch] = 1
-    for k, v in char_set.items():
+    for k, v in list(char_set.items()):
         out_char.write(k + '\t' + str(v) + '\n')
     out_char.close()
 
@@ -69,7 +69,7 @@ def get_dicts(path, sent_seg, tag_scheme='BIES', crf=1):
             if int(segs[1]) == 1:
                 unk_chars_idx.append(idx)
             idx += 1
-    idx2char = {k: v for v, k in char2idx.items()}
+    idx2char = {k: v for v, k in list(char2idx.items())}
     if tag_scheme == 'BI':
         if crf > 0:
             tag2idx = {'<P>': 0, 'B': 1, 'I': 2}
@@ -92,7 +92,7 @@ def get_dicts(path, sent_seg, tag_scheme='BIES', crf=1):
     if sent_seg:
         tag2idx['T'] = idx
         tag2idx['U'] = idx + 1
-    idx2tag = {k: v for v, k in tag2idx.items()}
+    idx2tag = {k: v for v, k in list(tag2idx.items())}
 
     trans_dict = {}
     key = ''
@@ -189,7 +189,7 @@ def get_ngrams(path, ng, is_space):
         for i in range(2, ng + 1):
             out_gram = codecs.open(path + '/' + str(i) + 'gram.txt', 'w', encoding='utf-8')
             grams = ngrams(raw, i, is_space)
-            for k, v in grams.items():
+            for k, v in list(grams.items()):
                 out_gram.write(k + '\t' + str(v) + '\n')
             out_gram.close()
 
@@ -209,7 +209,7 @@ def read_ngrams(path, ng):
 
 
 def get_sample_embedding(path, emb, chars2idx):
-    chars = chars2idx.keys()
+    chars = list(chars2idx.keys())
     short_emb = emb[emb.index('/') + 1: emb.index('.')]
     emb_dic = {}
     valid_chars=[]
@@ -223,7 +223,7 @@ def get_sample_embedding(path, emb, chars2idx):
         if ch in emb_dic:
             valid_chars.append(ch)
             for emb in emb_dic[ch]:
-                p_line += ' ' + unicode(emb)
+                p_line += ' ' + str(emb)
             fout.write(p_line + '\n')
     fout.close()
 
@@ -240,8 +240,8 @@ def read_sample_embedding(path, short_emb, char2idx):
             emb_dic[' '] = np.asarray(sets, dtype='float32')
         else:
             emb_dic[sets[0]] = np.asarray(sets[1:], dtype='float32')
-    emb_dim = len(emb_dic.items()[0][1])
-    for ch in char2idx.keys():
+    emb_dim = len(list(emb_dic.items())[0][1])
+    for ch in list(char2idx.keys()):
         if ch in emb_dic:
             emb_values.append(emb_dic[ch])
             valid_chars.append(ch)
@@ -390,7 +390,7 @@ def get_input_vec(path, fname, char2idx, tag2idx, limit=500, sent_seg=False, is_
                 break
         max_len = min(max_len, limit)
         if l_count > 0:
-            print '%d (out of %d) sentences are chopped.' % (l_count, s_count)
+            print('%d (out of %d) sentences are chopped.' % (l_count, s_count))
     return [x_indices], [y_indices], max_len
 
 
@@ -543,7 +543,7 @@ def get_input_vec_raw(path, fname, char2idx, lines=None, limit=500, sent_seg=Fal
                 x = []
         max_len = min(max_len, limit)
         if l_count > 0:
-            print '%d (out of %d) sentences are chopped.' % (l_count, s_count)
+            print('%d (out of %d) sentences are chopped.' % (l_count, s_count))
     return [x_indices], max_len
 
 
@@ -608,7 +608,7 @@ def get_dict_vec(trans_dict, char2idx):
     max_x, max_y = 0, 0
     x = []
     y = []
-    for k, v in trans_dict.items():
+    for k, v in list(trans_dict.items()):
         x.append(get_vecs(k, char2idx))
         y.append(get_vecs(v.replace('  ', ' '), char2idx) + [2])
         if len(k) > max_x:
@@ -621,9 +621,9 @@ def get_dict_vec(trans_dict, char2idx):
     y = pad_zeros(y, max_y)
     assert len(x) == len(y)
     num = len(x)
-    xy = zip(x, y)
+    xy = list(zip(x, y))
     random.shuffle(xy)
-    xy = zip(*xy)
+    xy = list(zip(*xy))
     t_x = xy[0][:int(num * 0.95)]
     t_y = xy[1][:int(num * 0.95)]
     v_x = xy[0][int(num * 0.95):]
@@ -636,7 +636,7 @@ def get_ngram_dic(ng):
     for i, gram in enumerate(ng):
         g_dic = {'<P>': 0, '<UNK>': 1, '<#>': 2}
         idx = 3
-        for g in gram.keys():
+        for g in list(gram.keys()):
             if gram[g] > 1:
                 g_dic[g] = idx
             else:
@@ -649,10 +649,10 @@ def get_ngram_dic(ng):
 def gram_vec(raw, dic, limit=500, sent_seg=False, is_space=True):
     out = []
     if is_space == 'sea':
-        ngram = len(dic.keys()[0].split('_'))
+        ngram = len(list(dic.keys())[0].split('_'))
     else:
         ngram = 0
-        for k in dic.keys():
+        for k in list(dic.keys()):
             if '<PAD>' not in k:
                 ngram = len(k)
                 break
@@ -836,7 +836,7 @@ def read_vocab_tag(path):
     for i, line in enumerate(codecs.open(path, 'rb', encoding='utf-8')):
         line = line.strip()
         tag2idx[line] = i
-    idx2tag = {k: v for v, k in tag2idx.items()}
+    idx2tag = {k: v for v, k in list(tag2idx.items())}
     return tag2idx, idx2tag
 
 
@@ -1015,12 +1015,12 @@ def raw2tags(raw, sents, path, train_file, creat_dict=True, gold_path=None, igno
     if creat_dict and not ignore_mwt:
         for key in final_dic:
             wd.write(key + '\n')
-            s_dic = sorted(final_dic[key].items(), key=lambda x: x[1], reverse=True)
+            s_dic = sorted(list(final_dic[key].items()), key=lambda x: x[1], reverse=True)
             for i in s_dic:
                 wd.write(i[0] + '\t' + str(i[1]) + '\n')
             wd.write('\n')
     wt.close()
-    print 'invalid sentences: ', invalid, len(raw)
+    print('invalid sentences: ', invalid, len(raw))
 
 
 def raw2tags_sea(raw, sents, path, train_file, gold_path=None, reset=False, tag_scheme='BIES'):
@@ -1094,7 +1094,7 @@ def raw2tags_sea(raw, sents, path, train_file, gold_path=None, reset=False, tag_
         wtg.close()
     wt.close()
 
-    print 'invalid sentences: ', invalid, len(raw)
+    print('invalid sentences: ', invalid, len(raw))
 
 
 def pad_zeros(l, max_len):
@@ -1109,7 +1109,7 @@ def pad_zeros(l, max_len):
         padded = np.asarray(padded)
     elif type(l) is dict:
         padded = {}
-        for k, v in l.iteritems():
+        for k, v in l.items():
             padded[k] = [np.pad(item, (0, max_len - len(item)), 'constant', constant_values=0) for item in v]
     return padded
 
@@ -1125,7 +1125,7 @@ def buckets(x, y, size=50):
     num_inputs = len(x)
     samples = x + y
     num_items = len(samples)
-    xy = zip(*samples)
+    xy = list(zip(*samples))
     xy.sort(key=lambda i: len(i[0]))
     t_len = size
     idx = 0
@@ -1152,7 +1152,7 @@ def pad_bucket(x, y, limit, bucket_len_c=None):
     padded = [[] for _ in range(num_tags + num_inputs)]
     bucket_counts = []
     samples = x + y
-    xy = zip(*samples)
+    xy = list(zip(*samples))
     if bucket_len_c is None:
         bucket_len_c = []
         for i, item in enumerate(xy):
@@ -1163,7 +1163,7 @@ def pad_bucket(x, y, limit, bucket_len_c=None):
             bucket_counts.append(len(item[0]))
             for idx in range(num_tags + num_inputs):
                 padded[idx].append(pad_zeros(item[idx], max_len))
-        print 'Number of buckets: ', len(bucket_len_c)
+        print('Number of buckets: ', len(bucket_len_c))
     else:
         idy = 0
         for item in xy:
@@ -1573,10 +1573,10 @@ def get_new_embeddings(new_chars, emb_dim, emb_path):
 def update_char_dict(char2idx, new_chars, unk_chars_idx, valid_chars=None):
     l_quos = ['"', '«', '„']
     r_quos = ['"', '»', '“']
-    l_quos = [unicode(ch) for ch in l_quos]
-    r_quos = [unicode(ch) for ch in r_quos]
+    l_quos = [str(ch) for ch in l_quos]
+    r_quos = [str(ch) for ch in r_quos]
     sub_dict = {}
-    old_chars = char2idx.keys()
+    old_chars = list(char2idx.keys())
     dim = len(char2idx) + 10
     if valid_chars is not None:
         for ch in valid_chars:
@@ -1588,7 +1588,7 @@ def update_char_dict(char2idx, new_chars, unk_chars_idx, valid_chars=None):
             if valid_chars is None or char not in valid_chars:
                 unk_chars_idx.append(dim)
             dim += 1
-    idx2char = {k: v for v, k in char2idx.items()}
+    idx2char = {k: v for v, k in list(char2idx.items())}
     for ch in new_chars:
         if ch in l_quos:
             for l_ch in l_quos:
@@ -1625,10 +1625,10 @@ def get_new_grams(path, gram2idx, is_raw=False, is_space=True):
     for g_dic in gram2idx:
         new_g = []
         if is_space == 'sea':
-            n = len(g_dic.keys()[0].split('_'))
+            n = len(list(g_dic.keys())[0].split('_'))
         else:
             n = 0
-            for k in g_dic.keys():
+            for k in list(g_dic.keys()):
                 if '<PAD>' not in k:
                     n = len(k)
                     break
@@ -1697,7 +1697,7 @@ def biased_out(prediction, bias):
     if idx == len(props):
         idx -= 1
     th = props[idx]
-    print 'threshold: ', th, 1 / (1 + np.exp(-th))
+    print('threshold: ', th, 1 / (1 + np.exp(-th)))
     for pre in b_pres:
         pre[pre >= th] = 0
         pre[pre != 0] = 1
@@ -1746,9 +1746,9 @@ def validator(raw, generated):
                     raw_l = raw_l[l_w:]
                     raw_l = raw_l.strip()
                 else:
-                    print r_seg
-                    print raw_l[:l_w]
-                    print ''
+                    print(r_seg)
+                    print(raw_l[:l_w])
+                    print('')
                     raise Exception('Error: unmatch...')
             j += 1
 

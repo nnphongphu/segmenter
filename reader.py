@@ -280,3 +280,4 @@ def get_raw(path, fin, fout, cat='other', new=True, is_dev=True, form='conll', i
     fout.close()
     if not is_dev:
         fout_dev.close()
+

@@ -219,3 +219,4 @@ def trans_evaluator(prediction, gold):
     else:
         f1score = (2 * precision * recall) / (precision + recall)
     return acc, f1score
+

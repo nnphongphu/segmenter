@@ -114,3 +114,4 @@ def loss_wrapper(y, y_, loss_function, transitions=None, nums_tags=None, batch_s
             total_loss.append(tf.reshape(loss_function(sy, sy_), [-1]))
     return tf.stack(total_loss)
 
+

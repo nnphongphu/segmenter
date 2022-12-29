@@ -6,7 +6,7 @@ import losses
 import toolbox
 import batch as Batch
 import random
-import cPickle as pickle
+import pickle as pickle
 import codecs
 import evaluation
 
@@ -62,7 +62,7 @@ class Model(object):
                          'buckets_char': self.buckets_char, 'ngram': self.ngram, 'is_space': self.is_space,
                          'sent_seg': self.sent_seg, 'emb_path': self.emb_path, 'tag_scheme': self.tag_scheme}
             #print param_dic
-            f_model = open(trained_model, 'w')
+            f_model = open(trained_model, 'wb')
             pickle.dump(param_dic, f_model)
             f_model.close()
 
@@ -135,7 +135,7 @@ class Model(object):
             self.output_.append([tf.placeholder(tf.int32, [None, bucket], name='tags' + str(bucket))])
             self.bucket_dit[bucket] = idx
 
-            print 'Bucket %d, %f seconds' % (idx + 1, time() - t1)
+            print('Bucket %d, %f seconds' % (idx + 1, time() - t1))
 
         assert len(self.input_v) == len(self.output)
 
@@ -146,9 +146,9 @@ class Model(object):
     def config(self, optimizer, decay, lr_v=None, momentum=None, clipping=True, max_gradient_norm=5.0):
 
         self.decay = decay
-        print 'Training preparation...'
+        print('Training preparation...')
 
-        print 'Defining loss...'
+        print('Defining loss...')
         loss = []
         if self.crf > 0:
             loss_function = losses.crf_loss
@@ -181,17 +181,17 @@ class Model(object):
 
         self.train_step = []
 
-        print 'Computing gradients...'
+        print('Computing gradients...')
 
         for idx, l in enumerate(loss):
             t2 = time()
             if clipping:
                 gradients = tf.gradients(l, self.params)
                 clipped_gradients, norm = tf.clip_by_global_norm(gradients, max_gradient_norm)
-                train_step = optimizer.apply_gradients(zip(clipped_gradients, self.params))
+                train_step = optimizer.apply_gradients(list(zip(clipped_gradients, self.params)))
             else:
                 train_step = optimizer.minimize(l)
-            print 'Bucket %d, %f seconds' % (idx + 1, time() - t2)
+            print('Bucket %d, %f seconds' % (idx + 1, time() - t2))
             self.train_step.append(train_step)
 
     def decode_graph(self):
@@ -261,7 +261,7 @@ class Model(object):
         for op in self.updates:
             sess.run(op)
 
-        print 'Loaded.'
+        print('Loaded.')
 
     def define_transducer_dict(self, trans_str, char2idx, sess, transducer):
         indices = []
@@ -299,20 +299,20 @@ class Model(object):
 
         transducer_dict = None
         if transducer is not None:
-            char2idx = {k:v for v, k in idx2char.items()}
+            char2idx = {k:v for v, k in list(idx2char.items())}
 
             def transducer_dict(trans_str):
                 return self.define_transducer_dict(trans_str, char2idx, sess[-1], transducer)
 
         for epoch in range(epochs):
-            print 'epoch: %d' % (epoch + 1)
+            print('epoch: %d' % (epoch + 1))
             t = time()
             if epoch % decay_step == 0 and decay > 0:
                 lr_r = lr/(1 + decay*(epoch/decay_step))
 
             data_list = t_x + t_y
 
-            samples = zip(*data_list)
+            samples = list(zip(*data_list))
 
             random.shuffle(samples)
 
@@ -335,7 +335,7 @@ class Model(object):
             b_prediction = toolbox.decode_tags(b_prediction, idx2tag)
             predictions.append(b_prediction)
 
-            predictions = zip(*predictions)
+            predictions = list(zip(*predictions))
             predictions = toolbox.merge_bucket(predictions)
 
             if self.is_space == 'sea':
@@ -367,28 +367,28 @@ class Model(object):
 
 
             if sent_seg:
-                print 'Sentence segmentation:'
-                print 'F score: %f\n' % scores[5]
-                print 'Word segmentation:'
-                print 'F score: %f' % scores[2]
+                print('Sentence segmentation:')
+                print('F score: %f\n' % scores[5])
+                print('Word segmentation:')
+                print('F score: %f' % scores[2])
             else:
-                print 'F score: %f' % c_score
-            print 'Time consumed: %d seconds' % int(time() - t)
-        print 'Training is finished!'
+                print('F score: %f' % c_score)
+            print('Time consumed: %d seconds' % int(time() - t))
+        print('Training is finished!')
         if sent_seg:
-            print 'Sentence segmentation:'
-            print 'Best F score: %f' % best_score[5]
-            print 'Best Precision: %f' % best_score[3]
-            print 'Best Recall: %f\n' % best_score[4]
-            print 'Word segmentation:'
-            print 'Best F score: %f' % best_score[2]
-            print 'Best Precision: %f' % best_score[0]
-            print 'Best Recall: %f\n' % best_score[1]
+            print('Sentence segmentation:')
+            print('Best F score: %f' % best_score[5])
+            print('Best Precision: %f' % best_score[3])
+            print('Best Recall: %f\n' % best_score[4])
+            print('Word segmentation:')
+            print('Best F score: %f' % best_score[2])
+            print('Best Precision: %f' % best_score[0])
+            print('Best Recall: %f\n' % best_score[1])
         else:
-            print 'Best F score: %f' % best_score[2]
-            print 'Best Precision: %f' % best_score[0]
-            print 'Best Recall: %f\n' % best_score[1]
-        print 'Best epoch: %d' % best_epoch
+            print('Best F score: %f' % best_score[2])
+            print('Best Precision: %f' % best_score[0])
+            print('Best Recall: %f\n' % best_score[1])
+        print('Best epoch: %d' % best_epoch)
 
     def test(self, t_x, t_y_raw, t_y_gold, idx2tag, idx2char, unk_chars, sub_dict, trans_dict, sess, transducer,
              ensemble=None, batch_size=100, sent_seg=False, bias=-1, outpath=None, trans_type='mix'):
@@ -405,7 +405,7 @@ class Model(object):
 
         transducer_dict = None
         if transducer is not None:
-            char2idx = {v: k for k, v in idx2char.items()}
+            char2idx = {v: k for k, v in list(idx2char.items())}
 
             def transducer_dict(trans_str):
                 return self.define_transducer_dict(trans_str, char2idx, sess[-1], transducer)
@@ -440,21 +440,21 @@ class Model(object):
                 wt.write(pre + '\n')
             wt.close()
 
-        print 'Evaluation scores:'
+        print('Evaluation scores:')
         if sent_seg:
-            print 'Sentence segmentation:'
-            print 'F score: %f' % scores[5]
-            print 'Precision: %f' % scores[3]
-            print 'Recall: %f\n' % scores[4]
-            print 'Word segmentation:'
-            print 'F score: %f' % scores[2]
-            print 'Precision: %f' % scores[0]
-            print 'Recall: %f\n' % scores[1]
+            print('Sentence segmentation:')
+            print('F score: %f' % scores[5])
+            print('Precision: %f' % scores[3])
+            print('Recall: %f\n' % scores[4])
+            print('Word segmentation:')
+            print('F score: %f' % scores[2])
+            print('Precision: %f' % scores[0])
+            print('Recall: %f\n' % scores[1])
         else:
-            print 'Precision: %f' % scores[0]
-            print 'Recall: %f' % scores[1]
-            print 'F score: %f' % scores[2]
-            print 'True negative rate: %f' % scores[3]
+            print('Precision: %f' % scores[0])
+            print('Recall: %f' % scores[1])
+            print('F score: %f' % scores[2])
+            print('True negative rate: %f' % scores[3])
 
     def tag(self, r_x, r_x_raw, idx2tag, idx2char, unk_chars, sub_dict, trans_dict, sess, transducer, ensemble=None,
             batch_size=100, outpath=None, sent_seg=False, seg_large=False, form='conll'):
@@ -475,7 +475,7 @@ class Model(object):
 
         transducer_dict = None
         if transducer is not None:
-            char2idx = {v: k for k, v in idx2char.items()}
+            char2idx = {v: k for k, v in list(idx2char.items())}
 
             def transducer_dict(trans_str):
                 return self.define_transducer_dict(trans_str, char2idx, sess[-1], transducer)
@@ -521,4 +521,5 @@ class Model(object):
             predictions = Batch.predict(sess=sess[0], model=model, crf=self.crf, argmax=argmax, batch_size=batch_size,
                                         data=data, dr=self.drop_out, ensemble=ensemble, verbose=verbose)
         return predictions
+
 
