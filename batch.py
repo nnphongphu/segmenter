@@ -64,7 +64,7 @@ def predict(sess, model, data, dr=None, transitions=None, crf=True, decode_sess=
     while start_idx < n_samples:
         if verbose:
             print('%d' % (start_idx*100/n_samples) + '%')
-        next_batch_input = samples[start_idx:start_idx + batch_size]
+        next_batch_input = samples[start_idx:start_idx + int(batch_size)]
         batch_size = len(next_batch_input)
         holders= []
         for item in range(num_items):
